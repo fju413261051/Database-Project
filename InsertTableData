@@ -1,0 +1,134 @@
+-- 車站 --------------------------------------------------------------------------------------------------------------
+insert into station (name, station_order) values ('南港', 1) ;
+insert into station (name, station_order) values ('台北', 2) ;
+insert into station (name, station_order) values ('板橋', 3) ;
+insert into station (name, station_order) values ('桃園', 4) ;
+insert into station (name, station_order) values ('新竹', 5) ;
+insert into station (name, station_order) values ('苗栗', 6) ;
+insert into station (name, station_order) values ('台中', 7) ;
+insert into station (name, station_order) values ('彰化', 8) ;
+insert into station (name, station_order) values ('雲林', 9) ;
+insert into station (name, station_order) values ('嘉義', 10) ;
+insert into station (name, station_order) values ('台南', 11) ;
+insert into station (name, station_order) values ('左營', 12) ;
+
+-- 會員 --------------------------------------------------------------------------------------------------------------
+insert into member (name, id_number, email, phone, password) values ('王小明', 'A100000001', 'ming@example.com', '0911000001', 'demo_hash_1');
+insert into member (name, id_number, email, phone, password) values ('李美玲', 'B200000002', 'meiling@example.com', '0922000002', 'demo_hash_2');
+insert into member (name, id_number, email, phone, password) values ('張大偉', 'C100000003', 'david@example.com', '0933000003', 'demo_hash_3');
+
+-- 票種 --------------------------------------------------------------------------------------------------------------
+-- （type_id：1 全票、2 孩童票、3 敬老票、4 愛心票）
+insert into ticket_type (name, discount_rate) values  ('全票', 1.00) ;
+insert into ticket_type (name, discount_rate) values  ('孩童票', 0.50) ;
+insert into ticket_type (name, discount_rate) values  ('敬老票', 0.50) ;
+insert into ticket_type (name, discount_rate) values  ('愛心票', 0.50) ;
+
+-- 4. 車次 --------------------------------------------------------------------------------------------------------------
+-- train_id 1：0117 南下直達 (11/1)
+-- train_id 2：0130 北上直達 (11/1)
+-- train_id 3：0645 南下、停較多站 (11/1)
+-- train_id 4：0117 南下直達 (11/2，同車次隔天)
+insert into train (train_no, run_date, direction) values  ('0117', '2026-11-01', '南下') ;
+insert into train (train_no, run_date, direction) values  ('0130', '2026-11-01', '北上');
+insert into train (train_no, run_date, direction) values  ('0645', '2026-11-01', '南下') ;
+insert into train (train_no, run_date, direction) values  ('0117', '2026-11-02', '南下');
+
+-- 5. 停靠點與時刻 --------------------------------------------------------------------------------------------------------------
+-- 車次 1：台北 → 台中 → 左營
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (1, 2,  1, NULL, '08:00');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (1, 7,  2, '08:50', '08:52');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (1, 12, 3, '09:35', NULL);
+
+-- 車次 2：左營 → 台中 → 台北
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (2, 12, 1, NULL,    '10:00');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (2, 7,  2, '10:43', '10:45');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (2, 2,  3, '11:35', NULL);
+
+-- 車次 3：南港 → 台北 → 板橋 → 桃園 → 新竹 → 台中 → 嘉義 → 台南 → 左營
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 1,  1, NULL,    '09:00');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 2,  2, '09:08', '09:10');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 3,  3, '09:18', '09:20');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 4,  4, '09:32', '09:34');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 5,  5, '09:48', '09:50');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 7,  6, '10:20', '10:22');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 10, 7, '10:55', '10:57');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 11, 8, '11:15', '11:17');
+insert into stop_at (train_id, station_id, stop_order, arrive_order, depart_order) values (3, 12, 9, '11:30', NULL);
+
+-- 6. 座位 --------------------------------------------------------------------------------------------------------------
+-- 示意用：第 1、2 車廂為標準車廂，第 6 車廂為商務車廂
+-- 每個車廂 3 排 × A~E 共 15 個座位，合計 45 個
+INSERT INTO seat (car_no, seat_no, car_type)
+SELECT c.car_no,
+       CAST(r.row_no AS varchar(2)) + l.letter,
+       c.car_type
+  FROM (VALUES (1, N'標準'), (2, N'標準'), (6, N'商務')) AS c(car_no, car_type)
+ CROSS JOIN (VALUES (1), (2), (3)) AS r(row_no)
+ CROSS JOIN (VALUES ('A'), ('B'), ('C'), ('D'), ('E')) AS l(letter)
+ ORDER BY c.car_no, r.row_no, l.letter;
+
+-- 7. 票價規則（價格為示意，非實際票價） --------------------------------------------------------------------------------------------------------------
+insert into fare_rule (origin_station_id, dest_station_id, car_type, full_price, effictive_from) values (2, 7,  '標準',  700, '2026-01-01');
+insert into fare_rule (origin_station_id, dest_station_id, car_type, full_price, effictive_from) values (2, 7,  '商務', 1330, '2026-01-01');
+insert into fare_rule (origin_station_id, dest_station_id, car_type, full_price, effictive_from) values (7, 12, '標準',  790, '2026-01-01');
+insert into fare_rule (origin_station_id, dest_station_id, car_type, full_price, effictive_from) values (7, 12, '商務', 1510, '2026-01-01');
+insert into fare_rule (origin_station_id, dest_station_id, car_type, full_price, effictive_from) values (2, 12, '標準', 1530, '2026-01-01');
+insert into fare_rule (origin_station_id, dest_station_id, car_type, full_price, effictive_from) values (2, 12, '商務', 2290, '2026-01-01');
+
+-- 北上（反方向）票價與南下相同，起訖站對調後複製  --------------------------------------------------------------------------------------------------------------
+INSERT INTO fare_rule (origin_station_id, dest_station_id, car_type, full_price, effictive_from)
+SELECT dest_station_id, origin_station_id, car_type, full_price, effictive_from
+  FROM fare_rule;
+
+-- 8. 訂位  --------------------------------------------------------------------------------------------------------------
+-- total_amount 先依各訂位底下的車票金額手動填好（尚未建立自動計算的 Trigger）
+-- booking 1：會員王小明，已付款，1 張票 700
+insert into booking (member_id, booking_time, status, total_amount, payment_deadline, payment_method, contact_name, contact_id_number, contact_phone, contact_email) values 
+                    (1, '2026-10-20T10:15:00', 'paid', 700, '2026-10-22T10:15:00', N'信用卡', N'王小明', 'A100000001', '0911000001', 'ming@example.com');
+
+-- booking 2：訪客（member_id 為 NULL），已付款，1 張票 790
+insert into booking (member_id, booking_time, status, total_amount, payment_deadline, payment_method, contact_name, contact_id_number, contact_phone, contact_email) values 
+                    (NULL, '2026-10-20T11:30:00', 'paid', 790, '2026-10-22T11:30:00', N'超商',N'陳大華', 'D100000004', '0944000004', 'chen@example.com') ;
+
+-- booking 3：會員李美玲（帶小孩），已付款，2 張票 1530 + 765
+insert into booking (member_id, booking_time, status, total_amount, payment_deadline, payment_method, contact_name, contact_id_number, contact_phone, contact_email) values 
+                    (2, '2026-10-21T09:00:00', 'paid', 2295, '2026-10-23T09:00:00', N'行動支付', N'李美玲', 'B200000002', '0922000002', 'meiling@example.com') ;
+
+-- booking 4：會員王小明，尚未付款（付款方式為 NULL），1 張商務票 1330
+insert into booking (member_id, booking_time, status, total_amount, payment_deadline, payment_method, contact_name, contact_id_number, contact_phone, contact_email) values 
+                    (1, '2026-10-24T08:00:00', 'pending',   1330, '2026-10-26T08:00:00', NULL, N'王小明', 'A100000001', '0911000001', 'ming@example.com') ;
+
+-- booking 5：會員李美玲，已取消，原本 1 張票 700
+insert into booking (member_id, booking_time, status, total_amount, payment_deadline, payment_method, contact_name, contact_id_number, contact_phone, contact_email) values 
+                     (2, '2026-10-22T14:00:00', 'cancelled', 700,  '2026-10-24T14:00:00', NULL, N'李美玲', 'B200000002', '0922000002', 'meiling@example.com');
+
+-- 9. 車票  --------------------------------------------------------------------------------------------------------------
+-- 設計重點：
+--   T1 與 T2 在同一班車(train 1)、同一座位(1 號車 1A)，
+--   但 T1 是台北→台中，T2 是台中→左營，區間不重疊，所以都可以賣出。
+--   T6 是已取消的票（cancelled），不佔座位，所以可以與 T1 同座位、同區間。
+
+ -- T1：booking 1，車次 1，台北→台中，1 號車 1A，全票
+insert into ticket (booking_id, train_id, seat_id, type_id, origin_station_id, dest_station_id, ticket_status, passenger_name, paid_price) values 
+                   (1, 1, (SELECT seat_id FROM seat WHERE car_no = 1 AND seat_no = '1A'), 1, 2, 7,  'valid',  N'王小明', 700);
+
+-- T2：booking 2，車次 1，台中→左營，1 號車 1A，全票
+insert into ticket (booking_id, train_id, seat_id, type_id, origin_station_id, dest_station_id, ticket_status, passenger_name, paid_price) values 
+                   (2, 1, (SELECT seat_id FROM seat WHERE car_no = 1 AND seat_no = '1A'), 1, 7, 12, 'valid',     N'陳大華', 790);
+
+-- T3：booking 3，車次 1，台北→左營，1 號車 1B，全票
+insert into ticket (booking_id, train_id, seat_id, type_id, origin_station_id, dest_station_id, ticket_status, passenger_name, paid_price) values 
+                   (3, 1, (SELECT seat_id FROM seat WHERE car_no = 1 AND seat_no = '1B'), 1, 2, 12, 'valid',     N'李美玲', 1530) ;
+
+-- T4：booking 3，車次 1，台北→左營，1 號車 1C，孩童票（五折）
+insert into ticket (booking_id, train_id, seat_id, type_id, origin_station_id, dest_station_id, ticket_status, passenger_name, paid_price) values 
+                   (3, 1, (SELECT seat_id FROM seat WHERE car_no = 1 AND seat_no = '1C'), 2, 2, 12, 'valid',     N'李小寶', 765);
+
+-- T5：booking 4（未付款），車次 3，台北→台中，6 號車（商務）1A，全票
+insert into ticket (booking_id, train_id, seat_id, type_id, origin_station_id, dest_station_id, ticket_status, passenger_name, paid_price) values 
+                   (4, 3, (SELECT seat_id FROM seat WHERE car_no = 6 AND seat_no = '1A'), 1, 2, 7,  'valid',     N'王小明', 1330) ;
+
+-- T6：booking 5（已取消），車次 1，台北→台中，1 號車 1A，已取消
+insert into ticket (booking_id, train_id, seat_id, type_id, origin_station_id, dest_station_id, ticket_status, passenger_name, paid_price) values 
+                   (5, 1, (SELECT seat_id FROM seat WHERE car_no = 1 AND seat_no = '1A'), 1, 2, 7,  'cancelled', N'李美玲', 700);

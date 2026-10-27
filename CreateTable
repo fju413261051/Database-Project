@@ -1,0 +1,137 @@
+-- IDENTITY(1,1)
+-- 第一個數字 (Seed，起始值)：代表這欄的初始值從 1 開始。
+-- 第二個數字 (Increment，遞增值)：代表每新增一筆資料，該欄位的數值就會自動增加 1
+
+-- 會員資料 --------------------------------------------------------------------
+-- member_id(會員系統編號)
+-- id_number(身分證號碼)
+create table member(
+	member_id		numeric(10,0)	identity(1,1),
+	name			varchar(20)		NOT NULL,
+	id_number		varchar(10)		NOT NULL,
+	email			varchar(100)	NOT NULL,
+	phone			varchar(20)		NOT NULL,
+	password		varchar(255)	NOT NULL,
+	primary key (member_id),
+	unique (id_number),
+	unique (email),
+	unique (phone)
+) ;
+
+-- 訂位 --------------------------------------------------------------------
+-- contact_name(聯絡人姓名)
+create table booking(
+	booking_id			numeric(20,0)	identity(1,1),
+	member_id			numeric(10,0)	NULL,
+	booking_time		datetime		NOT NULL		default sysdatetime(),
+	status				varchar(10)		NOT NULL		default 'pending'		check (status in ('pending', 'paid', 'cancelled', 'expired')), 
+	total_amount		numeric(20,0)	NOT NULL		check (total_amount>=0),
+	payment_deadline	datetime		NOT NULL,
+	payment_method		varchar(10)		NULL			check (payment_method in ('信用卡', '超商', 'ATM', '行動支付')), 
+	contact_name		varchar(10)		NOT NULL,
+	contact_id_number	varchar(10)		NOT NULL,
+	contact_phone		varchar(20)		NOT NULL,
+	contact_email		varchar(100)	NOT NULL,
+	primary key(booking_id),
+	foreign key (member_id) references member (member_id) on delete cascade
+) ;
+
+-- 車票種類 --------------------------------------------------------------------
+create table ticket_type(
+	type_id			numeric(20,0)	identity(1,1),
+	name			varchar(10)		NOT NULL,
+	discount_rate	numeric(3,2)	NOT NULL		check (discount_rate>0 and discount_rate<=1),
+	primary key(type_id)
+) ;
+
+-- 車站 --------------------------------------------------------------------
+-- station_id(車站系統編號)
+-- station_order(車站順序)
+create table station(
+	station_id		numeric(20,0)	identity(1,1),
+	name			varchar(10)		NOT NULL,
+	station_order	numeric(20,0)	NOT NULL	check (station_order>0),
+	primary key (station_id),
+	unique (name),
+	unique (station_order)
+) ;
+
+-- 車次(某車次在某一天的實際班次) ------------------------------------------
+-- train_id(某一天、某班特定的列車)
+-- train_no(車次編號)
+-- run_date(運行日期)
+create table train(
+	train_id	numeric(20,0)	identity(1,1),
+	train_no	varchar(10)		NOT NULL,
+	run_date	date			NOT NULL,
+	direction	varchar(10)		NOT NULL
+				check (direction in ('南下', '北上')),
+	primary key (train_id),
+	unique (train_no, run_date)
+) ;
+
+-- 座位 --------------------------------------------------------------------
+-- car_no(車廂編號)
+-- seat_no(座位編號)
+create table seat(
+	seat_id		numeric(20,0)	identity(1,1),
+	car_no		numeric(20,0)	NOT NULL		check(car_no between 1 and 12),
+	seat_no		varchar(10)		NOT NULL,
+	car_type	varchar(10)		NOT NULL		check (car_type in ('標準', '商務')),
+	primary key(seat_id),
+	unique (car_no, seat_no)
+) ;
+
+-- 票價規則 --------------------------------------------------------------------
+create table fare_rule(
+	fare_rule_id		numeric(20,0)	identity(1,1),
+	origin_station_id	numeric(20,0)	NOT NULL,
+	dest_station_id		numeric(20,0)	NOT NULL,
+	car_type			varchar(10)		NOT NULL	check (car_type in ('標準', '商務')),
+	full_price			numeric(20,0)	NOT NULL	check (full_price >= 0),
+	effictive_from		datetime		NOT NULL,
+	effictive_to		datetime		NULL,
+
+	check (origin_station_id != dest_station_id),
+	check (effictive_to is NULL or effictive_to>=effictive_from),
+	unique (origin_station_id, dest_station_id, car_type, effictive_from),
+
+	primary key(fare_rule_id),
+	foreign key (origin_station_id) references station (station_id) on delete cascade,
+	foreign key (dest_station_id) references station (station_id)
+) ;
+
+-- 停靠點 --------------------------------------------------------------------
+create table stop_at(
+	train_id		numeric(20,0)	NOT NULL,
+	station_id		numeric(20,0)	NOT NULL,
+	stop_order		numeric(20,0)	NOT NULL	check(stop_order>0),
+	arrive_order	datetime,
+	depart_order	datetime,
+	primary key (train_id, station_id),
+	foreign key (train_id) references train (train_id) on delete cascade,
+	foreign key (station_id) references station (station_id) on delete cascade
+) ;
+
+-- 車票 --------------------------------------------------------------------
+create table ticket(
+	ticket_id			numeric(20,0)	NOT NULL	identity(1,1),
+	booking_id			numeric(20,0)	NOT NULL,
+	train_id			numeric(20,0)	NOT NULL,
+	seat_id				numeric(20,0)	NOT NULL,
+	type_id				numeric(20,0)	NOT NULL,
+	origin_station_id	numeric(20,0)	NOT NULL,
+	dest_station_id		numeric(20,0)	NOT NULL,
+	ticket_status		varchar(100)	NOT NULL	default 'valid'		check (ticket_status in ('valid', 'cancelled', 'used')),
+	passenger_name		varchar(100)	NOT NULL,
+	paid_price			numeric(20,0)	NOT NULL	check (paid_price >= 0),
+
+	check(origin_station_id != dest_station_id),
+	primary key(ticket_id),
+	foreign key (booking_id) references booking (booking_id) on delete cascade,
+	foreign key (train_id) references train (train_id),
+	foreign key (seat_id) references seat (seat_id),
+	foreign key (type_id) references ticket_type (type_id),
+	foreign key (origin_station_id) references station (station_id),
+	foreign key (dest_station_id) references station (station_id)
+) ;
