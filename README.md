@@ -12,13 +12,13 @@
 
 | 檔案名稱 | 說明 |
 | :--- | :--- |
-| `First.sql`  | 建立資料表結構（Schema）、主鍵/外鍵、CHECK 與 UNIQUE 約束 |
-| `First-insert.sql`  | 插入營運基礎設定、測試帳號與示範訂票資料 |
+| CreateTable  | 建立資料表結構（Schema）、主鍵/外鍵 |
+| InsertTableData  | 插入營運基礎設定、測試帳號與示範訂票資料 |
 
 所有表單:
 member（會員）、booking（訂位）、ticket（車票）、ticket_type（票種）、station（車站）、train（車次）、stop_at（停靠點）、seat（座位）、fare_rule（票價規則）
 
 使用方式:
 建立資料庫 Project
-執行 First.sql 建立資料表
-執行 First-insert.sql 匯入示範資料
+執行 CreateTable 建立資料表
+執行 InsertTableData 匯入示範資料
