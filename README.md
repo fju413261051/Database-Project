@@ -22,3 +22,5 @@ member（會員）、booking（訂位）、ticket（車票）、ticket_type（�
 建立資料庫 Project
 執行 CreateTable 建立資料表
 執行 InsertTableData 匯入示範資料
+
+33
